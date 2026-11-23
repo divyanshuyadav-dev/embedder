@@ -40,7 +40,7 @@ from tqdm import tqdm
 # 1. CONFIGURATION
 # ============================================================
 
-DATA_ROOT = "cattle_dataset"
+DATA_ROOT = "cattle_dataset_split"
 
 PRETRAINED_MODEL = "mobilefacenet_scripted.pt"
 
@@ -48,7 +48,7 @@ OUTPUT_DIR = "cattle_checkpoints"
 
 IMAGE_SIZE = 112
 
-EPOCHS = 40
+EPOCHS = 50
 
 BATCH_SIZE = 32
 

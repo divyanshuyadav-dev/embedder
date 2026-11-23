@@ -1,3 +1,4 @@
 cattle_dataset
 cattle_dataset_split
 inference_media
+*.pt
