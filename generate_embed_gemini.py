@@ -4,8 +4,7 @@ import torch.nn.functional as F
 import numpy as np
 
 # Import MobileFaceNet from your training/model file
-from train import MobileFaceNet
-
+from cattle_train_gemini import MobileFaceNet
 
 class CattleEmbedder:
     def __init__(self, checkpoint_path: str, device: str = None):
@@ -13,12 +12,31 @@ class CattleEmbedder:
             device if device else ("cuda" if torch.cuda.is_available() else "cpu")
         )
 
-        ckpt = torch.load(checkpoint_path, map_location=self.device)
-        embedding_dim = ckpt.get("embedding_dim", 512)
+        ckpt = torch.load(checkpoint_path, map_location=self.device, weights_only=True)
+        
+        if isinstance(ckpt, dict) and "backbone" in ckpt:
+            embedding_dim = ckpt.get("embedding_dim", 512)
+            state_dict = ckpt["backbone"]
+        else:
+            embedding_dim = 512
+            state_dict = ckpt
 
         self.model = MobileFaceNet(embedding_size=embedding_dim).to(self.device)
-        self.model.load_state_dict(ckpt["backbone"])
+        self.model.load_state_dict(state_dict)
         self.model.eval()
+
+#class CattleEmbedder:
+#    def __init__(self, checkpoint_path: str, device: str = None):
+#        self.device = torch.device(
+#            device if device else ("cuda" if torch.cuda.is_available() else "cpu")
+#        )
+#
+#        ckpt = torch.load(checkpoint_path, map_location=self.device)
+#        embedding_dim = ckpt.get("embedding_dim", 512)
+#
+#        self.model = MobileFaceNet(embedding_size=embedding_dim).to(self.device)
+#        self.model.load_state_dict(ckpt["backbone"])
+#        self.model.eval()
 
     def preprocess(self, image_bgr: np.ndarray) -> torch.Tensor:
         img = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
@@ -44,7 +62,7 @@ class CattleEmbedder:
 
 
 if __name__ == "__main__":
-    embedder = CattleEmbedder("cattle_checkpoints/best.pth")
+    embedder = CattleEmbedder("mobilefacenet_weights.pth")
 
     x = embedder.get_embedding("inference_media/cattle-400/IMG20230924150617_01.jpg")
     y = embedder.get_embedding("inference_media/cattle-400/IMG20230924150607_01.jpg")

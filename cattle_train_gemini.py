@@ -359,76 +359,77 @@ def save_checkpoint(epoch, val_auc, rank1_acc, filename):
 # 9. TRAINING LOOP
 # ============================================================
 
-best_auc = 0.0
+if __name__ == "__main__":
+    best_auc = 0.0
 
-for epoch in range(1, EPOCHS + 1):
-    freeze_backbone = (epoch <= FREEZE_BACKBONE_EPOCHS)
+    for epoch in range(1, EPOCHS + 1):
+        freeze_backbone = (epoch <= FREEZE_BACKBONE_EPOCHS)
 
-    for param in backbone.parameters():
-        param.requires_grad = not freeze_backbone
+        for param in backbone.parameters():
+            param.requires_grad = not freeze_backbone
 
-    if freeze_backbone:
-        backbone.eval()
-    else:
-        backbone.train()
+        if freeze_backbone:
+            backbone.eval()
+        else:
+            backbone.train()
 
-    arcface.train()
+        arcface.train()
 
-    running_loss = 0.0
-    correct = 0
-    total = 0
+        running_loss = 0.0
+        correct = 0
+        total = 0
 
-    progress = tqdm(train_loader, desc=f"Epoch {epoch}/{EPOCHS}")
+        progress = tqdm(train_loader, desc=f"Epoch {epoch}/{EPOCHS}")
 
-    for images, labels in progress:
-        images = images.to(device)
-        labels = labels.to(device)
+        for images, labels in progress:
+            images = images.to(device)
+            labels = labels.to(device)
 
-        optimizer.zero_grad(set_to_none=True)
+            optimizer.zero_grad(set_to_none=True)
 
-        embeddings = backbone(images)
-        logits = arcface(embeddings, labels)
-        loss = criterion(logits, labels)
+            embeddings = backbone(images)
+            logits = arcface(embeddings, labels)
+            loss = criterion(logits, labels)
 
-        loss.backward()
+            loss.backward()
 
-        torch.nn.utils.clip_grad_norm_(
-            [p for p in list(backbone.parameters()) + list(arcface.parameters()) if p.requires_grad],
-            max_norm=5.0
-        )
+            torch.nn.utils.clip_grad_norm_(
+                [p for p in list(backbone.parameters()) + list(arcface.parameters()) if p.requires_grad],
+                max_norm=5.0
+            )
 
-        optimizer.step()
+            optimizer.step()
 
-        running_loss += loss.item()
-        predictions = logits.argmax(dim=1)
-        correct += (predictions == labels).sum().item()
-        total += labels.size(0)
+            running_loss += loss.item()
+            predictions = logits.argmax(dim=1)
+            correct += (predictions == labels).sum().item()
+            total += labels.size(0)
 
-        progress.set_postfix(loss=f"{loss.item():.4f}")
+            progress.set_postfix(loss=f"{loss.item():.4f}")
 
-    train_loss = running_loss / len(train_loader)
-    train_acc = 100.0 * correct / total
+        train_loss = running_loss / len(train_loader)
+        train_acc = 100.0 * correct / total
 
-    val_auc, val_rank1 = validate()
+        val_auc, val_rank1 = validate()
 
-    # Only step cosine schedule after warmup/frozen epochs
-    if not freeze_backbone:
-        scheduler.step()
+        # Only step cosine schedule after warmup/frozen epochs
+        if not freeze_backbone:
+            scheduler.step()
 
-    print("\n" + "=" * 55)
-    print(f"Epoch: {epoch}/{EPOCHS}")
-    print(f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}%")
-    print(f"Val ROC-AUC: {val_auc:.4f} | Val Rank-1: {val_rank1:.2f}%")
-    print(f"Backbone LR: {optimizer.param_groups[0]['lr']:.6f} | ArcFace LR: {optimizer.param_groups[1]['lr']:.6f}")
-    print("=" * 55)
+        print("\n" + "=" * 55)
+        print(f"Epoch: {epoch}/{EPOCHS}")
+        print(f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}%")
+        print(f"Val ROC-AUC: {val_auc:.4f} | Val Rank-1: {val_rank1:.2f}%")
+        print(f"Backbone LR: {optimizer.param_groups[0]['lr']:.6f} | ArcFace LR: {optimizer.param_groups[1]['lr']:.6f}")
+        print("=" * 55)
 
-    save_checkpoint(epoch, val_auc, val_rank1, "latest.pth")
+        save_checkpoint(epoch, val_auc, val_rank1, "latest.pth")
 
-    if val_auc > best_auc:
-        best_auc = val_auc
-        save_checkpoint(epoch, val_auc, val_rank1, "best.pth")
-        print("New best model saved!")
+        if val_auc > best_auc:
+            best_auc = val_auc
+            save_checkpoint(epoch, val_auc, val_rank1, "best.pth")
+            print("New best model saved!")
 
-print("\nTraining completed.")
-print(f"Best Validation ROC-AUC: {best_auc:.4f}")
-print("Best checkpoint:", os.path.join(OUTPUT_DIR, "best.pth"))
+    print("\nTraining completed.")
+    print(f"Best Validation ROC-AUC: {best_auc:.4f}")
+    print("Best checkpoint:", os.path.join(OUTPUT_DIR, "best.pth"))

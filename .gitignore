@@ -3,3 +3,4 @@ cattle_dataset_split
 inference_media
 *.pt
 *.pth
+__*
