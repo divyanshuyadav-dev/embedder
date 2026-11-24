@@ -4,3 +4,4 @@ inference_media
 *.pt
 *.pth
 __*
+cattle_dataset_128/
