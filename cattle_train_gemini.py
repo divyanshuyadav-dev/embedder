@@ -349,8 +349,8 @@ def save_checkpoint(epoch, val_auc, rank1_acc, filename):
             "embedding_dim": EMBEDDING_DIM,
             "num_classes": NUM_CLASSES,
             "class_to_idx": train_dataset.class_to_idx,
-            "val_auc": val_auc,
-            "val_rank1": rank1_acc
+            "val_auc": float(val_auc),
+            "val_rank1": float(rank1_acc)
         },
         os.path.join(OUTPUT_DIR, filename)
     )

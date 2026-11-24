@@ -62,7 +62,7 @@ class CattleEmbedder:
 
 
 if __name__ == "__main__":
-    embedder = CattleEmbedder("mobilefacenet_weights.pth")
+    embedder = CattleEmbedder("cattle_checkpoints/best.pth")
 
     x = embedder.get_embedding("inference_media/cattle-400/IMG20230924150617_01.jpg")
     y = embedder.get_embedding("inference_media/cattle-400/IMG20230924150607_01.jpg")
