@@ -29,7 +29,7 @@ from tqdm import tqdm
 # 1. CONFIGURATION
 # ============================================================
 
-DATA_ROOT = "cattle_dataset_split"
+DATA_ROOT = "cattle_dataset_128"
 PRETRAINED_WEIGHTS = "mobilefacenet_weights.pth"  # Set to None to train from scratch
 OUTPUT_DIR = "cattle_checkpoints"
 
@@ -48,7 +48,7 @@ WEIGHT_DECAY = 1e-4
 ARCFACE_MARGIN = 0.3
 ARCFACE_SCALE = 32.0
 
-NUM_WORKERS = 4
+NUM_WORKERS = 2
 SEED = 42
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -131,7 +131,8 @@ val_loader = DataLoader(
     batch_size=64,
     shuffle=False,
     num_workers=NUM_WORKERS,
-    pin_memory=(device.type == "cuda")
+    pin_memory=(device.type == "cuda"),
+    persistent_workers =True
 )
 
 
